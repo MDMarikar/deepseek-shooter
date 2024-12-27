@@ -3,8 +3,8 @@ const player = document.getElementById('player');
 const wall = document.getElementById('wall');
 const gameOverScreen = document.getElementById('game-over');
 const restartButton = document.getElementById('restart');
-const gameWidth = 800; // Width of the game container
-const gameHeight = 600; // Height of the game container
+let gameWidth = gameContainer.clientWidth; // Dynamic width based on container
+let gameHeight = gameContainer.clientHeight; // Dynamic height based on container
 let playerX = gameWidth / 2 - 25;
 let bullets = [];
 let enemies = [];
@@ -55,6 +55,7 @@ document.addEventListener('mousemove', (e) => {
 });
 
 document.addEventListener('touchmove', (e) => {
+  e.preventDefault(); // Prevent default touch behavior (scrolling/swiping)
   const touch = e.touches[0];
   const rect = gameContainer.getBoundingClientRect();
   playerX = touch.clientX - rect.left - 25; // Move player to touch position
@@ -67,7 +68,8 @@ document.addEventListener('click', () => {
   shootBullet();
 });
 
-document.addEventListener('touchstart', () => {
+document.addEventListener('touchstart', (e) => {
+  e.preventDefault(); // Prevent default touch behavior
   shootBullet();
 });
 

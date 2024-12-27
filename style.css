@@ -10,6 +10,7 @@ body {
   align-items: center;
   height: 100vh;
   background: #1a1a1a;
+  overflow: hidden; /* Prevent scrolling on mobile */
 }
 
 #game-wrapper {
@@ -19,6 +20,8 @@ body {
   background: #333;
   box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
   text-align: center;
+  max-width: 100%; /* Ensure it doesn't overflow on small screens */
+  width: 100%; /* Make it responsive */
 }
 
 #game-wrapper h1 {
@@ -30,9 +33,12 @@ body {
 
 #game-container {
   position: relative;
-  width: 800px;
-  height: 600px;
+  width: 100%; /* Responsive width */
+  height: 80vh; /* Responsive height */
+  max-width: 800px; /* Limit maximum width */
+  max-height: 600px; /* Limit maximum height */
   background: black;
+  margin: 0 auto; /* Center the container */
 }
 
 #player {

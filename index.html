@@ -2,9 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AI Shooter</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Prevent default touch behavior */
+    body, html {
+      touch-action: none;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
   <div id="game-wrapper">
@@ -20,24 +27,5 @@
     </div>
   </div>
   <script src="script.js"></script>
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAvs1S2_-8xRD8WCDE-qsCNPf8lqaZIh2Q",
-      authDomain: "aishooter-24e57.firebaseapp.com",
-      projectId: "aishooter-24e57",
-      storageBucket: "aishooter-24e57.firebasestorage.app",
-      messagingSenderId: "329119638955",
-      appId: "1:329119638955:web:94afc8a0166331ef42deee"
-    };
-  
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-  </script>
 </body>
 </html>
