@@ -3,6 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebas
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
+
 const firebaseConfig = {
   apiKey: "AIzaSyAvs1S2_-8xRD8WCDE-qsCNPf8lqaZIh2Q",
   authDomain: "aishooter-24e57.firebaseapp.com",
@@ -22,15 +23,15 @@ const player = document.getElementById('player');
 const wall = document.getElementById('wall');
 const gameOverScreen = document.getElementById('game-over');
 const restartButton = document.getElementById('restart');
-let gameWidth = gameContainer.clientWidth; // Dynamic width based on container
-let gameHeight = gameContainer.clientHeight; // Dynamic height based on container
+let gameWidth = gameContainer.clientWidth;
+let gameHeight = gameContainer.clientHeight;
 let playerX = gameWidth / 2 - 25;
 let bullets = [];
 let enemies = [];
 let score = 0;
 const scoreElement = document.getElementById('score');
 const wallBlocks = [];
-const totalWallBlocks = Math.floor(gameWidth / 22); // 20px width + 2px gap
+const totalWallBlocks = Math.floor(gameWidth / 22);
 let isMovingLeft = false;
 let isMovingRight = false;
 let highestScore = 0;
@@ -210,10 +211,10 @@ restartButton.addEventListener('click', resetGame);
 function gameLoop() {
   // Move player based on keyboard input
   if (isMovingLeft) {
-    playerX -= 20; // Move left
+    playerX -= 5; // Slower movement for mobile
   }
   if (isMovingRight) {
-    playerX += 20; // Move right
+    playerX += 5; // Slower movement for mobile
   }
   playerX = Math.max(0, Math.min(playerX, gameWidth - 50)); // Keep player within bounds
   player.style.left = `${playerX}px`;
@@ -221,7 +222,7 @@ function gameLoop() {
   // Move bullets
   bullets.forEach((bullet, index) => {
     const bottom = parseFloat(bullet.style.bottom);
-    bullet.style.bottom = `${bottom + 15}px`; // Move bullets faster
+    bullet.style.bottom = `${bottom + 8}px`; // Slower bullets for mobile
     if (bottom > gameHeight) {
       bullet.remove();
       bullets.splice(index, 1);
@@ -231,7 +232,7 @@ function gameLoop() {
   // Move enemies
   enemies.forEach((enemy, index) => {
     const top = parseFloat(enemy.style.top);
-    enemy.style.top = `${top + 3}px`; // Move enemies slower
+    enemy.style.top = `${top + 2}px`; // Slower enemies for mobile
     if (top > gameHeight) {
       enemy.remove();
       enemies.splice(index, 1);
