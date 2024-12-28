@@ -49,11 +49,46 @@ body {
   bottom: 0; /* Position at the bottom */
   left: 50%; /* Start in the center horizontally */
   transform: translateX(-50%); /* Center horizontally */
-  width: 50px;
-  height: 50px;
-  background: blue;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
+  width: 50px; /* Wider base */
+  height: 70px; /* Taller height */
+  background: linear-gradient(45deg, #ff4500, #ff8c00); /* Gradient orange color */
+  clip-path: polygon(
+    50% 0%, /* Top center */
+    100% 100%, /* Bottom right */
+    0% 100% /* Bottom left */
+  );
+  border: 2px solid #ff8c00; /* Border color */
+  box-shadow: 0 0 10px rgba(255, 69, 0, 0.8); /* Glow effect */
+  animation: float 2s infinite ease-in-out; /* Floating animation */
+}
+
+/* Fins */
+#player::before,
+#player::after {
+  content: '';
+  position: absolute;
+  bottom: -10px; /* Position fins at the bottom */
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(45deg, #ff4500, #ff8c00); /* Gradient orange color */
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%); /* Triangle shape */
+}
+
+#player::before {
+  left: -15px; /* Left fin */
+}
+
+#player::after {
+  right: -15px; /* Right fin */
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
 }
 
 .bullet {
@@ -83,6 +118,19 @@ body {
 .armored-enemy {
   background-color: gray;
   border: 2px solid black;
+}
+
+.tougher-enemy {
+  background-color: green;
+}
+
+.swarm-boss {
+  position: absolute;
+  width: 96px;
+  height: 103px;
+  background-image: url('swarm-boss.png'); /* Ensure the image path is correct */
+  background-size: cover;
+  animation: float 2s infinite ease-in-out; /* Optional: Add floating animation */
 }
 
 .boss {

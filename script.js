@@ -34,6 +34,7 @@ let isMovingLeft = false;
 let isMovingRight = false;
 let highestScore = 0;
 let gameActive = true; // Track if the game is active
+let swarmBossActive = false; // Track if a Swarm Boss is currently active
 
 // Player speed variables
 let playerSpeed = 5; // Initial player speed
@@ -277,10 +278,62 @@ function spawnTougherEnemy() {
   if (score % 300 === 0 && score !== 0 && activeTougherEnemies < maxTougherEnemies) {
     const tougherEnemy = document.createElement('div');
     tougherEnemy.classList.add('enemy', 'tougher-enemy');
-    tougherEnemy.style.left = `${Math.random() * (gameWidth - 40)}px`;
+    const x = Math.random() * (gameWidth - 40);
+    tougherEnemy.style.left = `${x}px`;
     tougherEnemy.style.top = '0';
     tougherEnemy.health = tougherEnemyHealth; // Set initial health
     tougherEnemy.style.backgroundColor = tougherEnemyColors[0]; // Set initial color
+
+    // Randomly assign behavior: 30% drift, 30% normal, 40% erratic
+    const behavior = Math.random();
+
+    if (behavior < 0.3) {
+      // Drift towards player's position at spawn time
+      const targetX = playerX + player.offsetWidth / 2;
+
+      tougherEnemy.move = () => {
+        const currentX = parseFloat(tougherEnemy.style.left);
+        const currentY = parseFloat(tougherEnemy.style.top);
+
+        // Calculate direction towards the player's position
+        const directionX = targetX - currentX;
+        const directionY = gameHeight - currentY;
+
+        // Normalize the direction vector
+        const magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
+        const moveX = (directionX / magnitude) * 1; // Adjust speed as needed
+        const moveY = (directionY / magnitude) * 2; // Adjust speed as needed
+
+        // Update enemy position
+        tougherEnemy.style.left = `${currentX + moveX}px`;
+        tougherEnemy.style.top = `${currentY + moveY}px`;
+      };
+    } else if (behavior < 0.6) {
+      // Move straight down
+      tougherEnemy.move = () => {
+        const currentY = parseFloat(tougherEnemy.style.top);
+        tougherEnemy.style.top = `${currentY + 2}px`; // Adjust speed as needed
+      };
+    } else {
+      // Move erratically
+      let directionX = Math.random() > 0.5 ? 1 : -1; // Randomize left or right movement
+      let directionY = 1; // Move down
+
+      tougherEnemy.move = () => {
+        const currentX = parseFloat(tougherEnemy.style.left);
+        const currentY = parseFloat(tougherEnemy.style.top);
+
+        // Randomly change direction
+        if (Math.random() < 0.1) {
+          directionX = Math.random() > 0.5 ? 1 : -1;
+        }
+
+        // Update enemy position
+        tougherEnemy.style.left = `${currentX + directionX * 1}px`; // Adjust speed as needed
+        tougherEnemy.style.top = `${currentY + directionY * 2}px`; // Adjust speed as needed
+      };
+    }
+
     gameContainer.appendChild(tougherEnemy);
     enemies.push(tougherEnemy);
     activeTougherEnemies++; // Increment active tougher enemy count
@@ -300,6 +353,33 @@ function spawnBoss() {
   }
 }
 
+function spawnSwarmBoss() {
+  if (swarmBossActive) return; // Don't spawn if a Swarm Boss is already active
+
+  const swarmBoss = document.createElement('div');
+  swarmBoss.classList.add('swarm-boss');
+
+  // Ensure the Swarm Boss spawns at a safe height (e.g., at least 50% of the game height)
+  const minHeight = gameHeight * 0.5; // Minimum height (50% of the game height)
+  const randomHeight = Math.random() * (gameHeight - minHeight); // Random height between minHeight and gameHeight
+  swarmBoss.style.top = `${randomHeight}px`;
+  swarmBoss.style.left = '0';
+
+  swarmBoss.move = () => {
+    const currentX = parseFloat(swarmBoss.style.left);
+    swarmBoss.style.left = `${currentX + 2}px`; // Adjust speed as needed
+    if (currentX > gameWidth) {
+      swarmBoss.remove();
+      enemies.splice(enemies.indexOf(swarmBoss), 1);
+      swarmBossActive = false; // Reset Swarm Boss tracking
+    }
+  };
+
+  gameContainer.appendChild(swarmBoss);
+  enemies.push(swarmBoss);
+  swarmBossActive = true; // Mark Swarm Boss as active
+}
+
 function spawnEnemySwarm() {
   for (let i = 0; i < 5; i++) { // Spawn 5 enemies at once
     spawnEnemy();
@@ -313,6 +393,11 @@ function updateScore(points = 10) {
   // Spawn boss every 500 points
   if (score % 500 === 0 && score !== 0 && !boss) {
     spawnBoss();
+  }
+
+  // Spawn Swarm Boss every 200 points
+  if (score % 200 === 0 && score !== 0 && !swarmBossActive) {
+    spawnSwarmBoss();
   }
 }
 
@@ -364,6 +449,7 @@ function resetGame() {
   bullets = [];
   enemies = [];
   boss = null;
+  swarmBossActive = false; // Reset Swarm Boss tracking
   activeTougherEnemies = 0; // Reset active tougher enemy count
   extraEnemies = 0; // Reset extra enemies counter
   gameOverScreen.style.display = 'none';
@@ -489,19 +575,42 @@ function gameLoop(timestamp) {
         bullet.remove();
         bullets.splice(bulletIndex, 1);
 
-        if (enemy.classList.contains('tougher-enemy')) {
-          enemy.health--; // Reduce tougher enemy health
+        if (enemy.classList.contains('swarm-boss')) {
+          // Swarm Boss is hit
+          enemy.remove();
+          enemies.splice(enemyIndex, 1);
+          swarmBossActive = false; // Reset Swarm Boss tracking
+
+          // Kill half the enemies
+          const halfEnemies = Math.floor(enemies.length / 2);
+          for (let i = 0; i < halfEnemies; i++) {
+            enemies[i].remove(); // Remove from the DOM
+          }
+          enemies.splice(0, halfEnemies); // Remove from the enemies array
+
+          updateScore(50); // Give bonus points for defeating the Swarm Boss
+        } else if (enemy.classList.contains('tougher-enemy')) {
+          // Handle tougher enemy logic (existing code)
+          enemy.health--;
           if (enemy.health <= 0) {
-            enemy.remove(); // Remove tougher enemy
+            enemy.remove();
             enemies.splice(enemyIndex, 1);
-            activeTougherEnemies--; // Decrement active tougher enemy count
-            updateScore(20); // Give bonus points for defeating tougher enemy
+            activeTougherEnemies--;
+            updateScore(20);
           } else {
-            // Change color based on remaining health
             enemy.style.backgroundColor = tougherEnemyColors[tougherEnemyHealth - enemy.health];
           }
+        } else if (enemy.classList.contains('armored-enemy')) {
+          // Handle armored enemy logic
+          enemy.health--;
+          if (enemy.health <= 0) {
+            enemy.remove();
+            enemies.splice(enemyIndex, 1);
+            updateScore(15); // Give bonus points for defeating the armored enemy
+          }
         } else {
-          enemy.remove(); // Remove normal enemy
+          // Handle normal enemy logic (existing code)
+          enemy.remove();
           enemies.splice(enemyIndex, 1);
           updateScore();
         }
