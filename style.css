@@ -46,7 +46,7 @@ body {
 
 #player {
   position: absolute;
-  bottom: 0; /* Position at the bottom */
+  bottom: calc(0px + env(safe-area-inset-bottom)); /* Add safe area inset */
   left: 50%; /* Start in the center horizontally */
   transform: translateX(-50%); /* Center horizontally */
   width: 50px; /* Wider base */

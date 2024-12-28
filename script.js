@@ -582,13 +582,13 @@ function gameLoop(timestamp) {
           swarmBossActive = false; // Reset Swarm Boss tracking
 
           // Kill half the enemies
-          const halfEnemies = Math.floor(enemies.length / 2);
+          const halfEnemies = Math.floor(enemies.length * .75);
           for (let i = 0; i < halfEnemies; i++) {
             enemies[i].remove(); // Remove from the DOM
           }
           enemies.splice(0, halfEnemies); // Remove from the enemies array
 
-          updateScore(50); // Give bonus points for defeating the Swarm Boss
+          updateScore(100); // Give bonus points for defeating the Swarm Boss
         } else if (enemy.classList.contains('tougher-enemy')) {
           // Handle tougher enemy logic (existing code)
           enemy.health--;
@@ -596,7 +596,7 @@ function gameLoop(timestamp) {
             enemy.remove();
             enemies.splice(enemyIndex, 1);
             activeTougherEnemies--;
-            updateScore(20);
+            updateScore();
           } else {
             enemy.style.backgroundColor = tougherEnemyColors[tougherEnemyHealth - enemy.health];
           }
@@ -606,7 +606,7 @@ function gameLoop(timestamp) {
           if (enemy.health <= 0) {
             enemy.remove();
             enemies.splice(enemyIndex, 1);
-            updateScore(15); // Give bonus points for defeating the armored enemy
+            updateScore(); // Give bonus points for defeating the armored enemy
           }
         } else {
           // Handle normal enemy logic (existing code)
