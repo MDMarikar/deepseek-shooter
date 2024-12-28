@@ -1,3 +1,22 @@
+// Import the functions you need from the Firebase SDK
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAvs1S2_-8xRD8WCDE-qsCNPf8lqaZIh2Q",
+  authDomain: "aishooter-24e57.firebaseapp.com",
+  projectId: "aishooter-24e57",
+  storageBucket: "aishooter-24e57.firebasestorage.app",
+  messagingSenderId: "329119638955",
+  appId: "1:329119638955:web:94afc8a0166331ef42deee"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Game variables
 const gameContainer = document.getElementById('game-container');
 const player = document.getElementById('player');
 const wall = document.getElementById('wall');
@@ -14,6 +33,33 @@ const wallBlocks = [];
 const totalWallBlocks = Math.floor(gameWidth / 22); // 20px width + 2px gap
 let isMovingLeft = false;
 let isMovingRight = false;
+let highestScore = 0;
+
+// Fetch the highest score from Firestore
+async function fetchHighestScore() {
+  const docRef = doc(db, "scores", "highestScore");
+
+  try {
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      // If the document exists, fetch the highest score
+      highestScore = docSnap.data().score;
+      document.getElementById('highest-score-value').textContent = highestScore;
+    } else {
+      // If the document doesn't exist, create it with a default score of 0
+      await setDoc(docRef, { score: 0 });
+      console.log("Created highestScore document with default score 0.");
+      highestScore = 0;
+      document.getElementById('highest-score-value').textContent = highestScore;
+    }
+  } catch (error) {
+    console.error("Error fetching or creating highest score:", error);
+  }
+}
+
+// Call this function to fetch the highest score when the page loads
+fetchHighestScore();
 
 // Create the wall
 function createWall() {
@@ -123,9 +169,26 @@ function breakWall() {
   }
 }
 
-function endGame(message) {
+async function endGame(message) {
   gameOverScreen.style.display = 'block'; // Show the game over screen
   cancelAnimationFrame(gameLoop); // Stop the game loop
+
+  // Check if the current score is higher than the saved highest score
+  if (score > highestScore) {
+    highestScore = score;
+
+    try {
+      // Save the highest score to Firestore
+      await setDoc(doc(db, "scores", "highestScore"), {
+        score: highestScore
+      });
+      console.log("Highest score saved to Firestore!");
+      // Update the displayed highest score
+      document.getElementById('highest-score-value').textContent = highestScore;
+    } catch (error) {
+      console.error("Error saving score:", error);
+    }
+  }
 }
 
 function resetGame() {
