@@ -55,6 +55,10 @@ let bossChargeTimer = 0; // Timer before boss charges at the player
 // Track enemies that pass the player
 let extraEnemies = 0; // Number of extra enemies to add
 
+// Bullet cooldown variables
+let bulletCooldown = 0; // Cooldown timer
+const cooldownDuration = 50; // Cooldown duration in milliseconds (e.g., 500ms = 0.5 seconds)
+
 // Fetch the highest score from Firestore
 async function fetchHighestScore() {
   const docRef = doc(db, "scores", "highestScore");
@@ -100,7 +104,7 @@ document.addEventListener('keyup', (e) => {
 // Mouse/touch controls for movement
 document.addEventListener('mousemove', (e) => {
   const rect = gameContainer.getBoundingClientRect();
-  playerX = e.clientX - rect.left - 25;
+  playerX = e.clientX - rect.left - 25; // Adjust for player width
   playerX = Math.max(0, Math.min(playerX, gameWidth - 50)); // Keep player within bounds
   player.style.left = `${playerX}px`;
 });
@@ -109,7 +113,7 @@ document.addEventListener('touchmove', (e) => {
   e.preventDefault();
   const touch = e.touches[0];
   const rect = gameContainer.getBoundingClientRect();
-  playerX = touch.clientX - rect.left - 25;
+  playerX = touch.clientX - rect.left - 25; // Adjust for player width
   playerX = Math.max(0, Math.min(playerX, gameWidth - 50)); // Keep player within bounds
   player.style.left = `${playerX}px`;
 });
@@ -125,6 +129,10 @@ document.addEventListener('touchstart', (e) => {
 });
 
 function shootBullet() {
+  // Check if cooldown is active
+  if (bulletCooldown > 0) return;
+
+  // Create a new bullet
   const bullet = document.createElement('div');
   bullet.classList.add('bullet');
   const bulletX = playerX + player.offsetWidth / 2 - 5;
@@ -132,6 +140,9 @@ function shootBullet() {
   bullet.style.bottom = '70px';
   gameContainer.appendChild(bullet);
   bullets.push(bullet);
+
+  // Reset cooldown
+  bulletCooldown = cooldownDuration;
 }
 
 function spawnEnemy() {
@@ -140,6 +151,124 @@ function spawnEnemy() {
   const x = Math.random() * (gameWidth - 40);
   enemy.style.left = `${x}px`;
   enemy.style.top = '0';
+
+  // Randomly assign behavior: 30% drift, 30% normal, 40% erratic
+  const behavior = Math.random();
+
+  if (behavior < 0.3) {
+    // Drift towards player's position at spawn time
+    const targetX = playerX + player.offsetWidth / 2;
+
+    enemy.move = () => {
+      const currentX = parseFloat(enemy.style.left);
+      const currentY = parseFloat(enemy.style.top);
+
+      // Calculate direction towards the player's position
+      const directionX = targetX - currentX;
+      const directionY = gameHeight - currentY;
+
+      // Normalize the direction vector
+      const magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
+      const moveX = (directionX / magnitude) * 1; // Adjust speed as needed
+      const moveY = (directionY / magnitude) * 2; // Adjust speed as needed
+
+      // Update enemy position
+      enemy.style.left = `${currentX + moveX}px`;
+      enemy.style.top = `${currentY + moveY}px`;
+    };
+  } else if (behavior < 0.6) {
+    // Move straight down
+    enemy.move = () => {
+      const currentY = parseFloat(enemy.style.top);
+      enemy.style.top = `${currentY + 2}px`; // Adjust speed as needed
+    };
+  } else {
+    // Move erratically
+    let directionX = Math.random() > 0.5 ? 1 : -1; // Randomize left or right movement
+    let directionY = 1; // Move down
+
+    enemy.move = () => {
+      const currentX = parseFloat(enemy.style.left);
+      const currentY = parseFloat(enemy.style.top);
+
+      // Randomly change direction
+      if (Math.random() < 0.1) {
+        directionX = Math.random() > 0.5 ? 1 : -1;
+      }
+
+      // Update enemy position
+      enemy.style.left = `${currentX + directionX * 1}px`; // Adjust speed as needed
+      enemy.style.top = `${currentY + directionY * 2}px`; // Adjust speed as needed
+    };
+  }
+
+  gameContainer.appendChild(enemy);
+  enemies.push(enemy);
+}
+
+function spawnFastEnemy() {
+  const enemy = document.createElement('div');
+  enemy.classList.add('enemy', 'fast-enemy');
+  const x = Math.random() * (gameWidth - 40);
+  enemy.style.left = `${x}px`;
+  enemy.style.top = '0';
+
+  // Store the player's position when the enemy is spawned
+  const targetX = playerX + player.offsetWidth / 2;
+
+  // Add movement towards the player's position
+  enemy.move = () => {
+    const currentX = parseFloat(enemy.style.left);
+    const currentY = parseFloat(enemy.style.top);
+
+    // Calculate direction towards the player's position
+    const directionX = targetX - currentX;
+    const directionY = gameHeight - currentY;
+
+    // Normalize the direction vector
+    const magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
+    const moveX = (directionX / magnitude) * 2; // Adjust speed as needed
+    const moveY = (directionY / magnitude) * 4; // Adjust speed as needed
+
+    // Update enemy position
+    enemy.style.left = `${currentX + moveX}px`;
+    enemy.style.top = `${currentY + moveY}px`;
+  };
+
+  gameContainer.appendChild(enemy);
+  enemies.push(enemy);
+}
+
+function spawnArmoredEnemy() {
+  const enemy = document.createElement('div');
+  enemy.classList.add('enemy', 'armored-enemy');
+  const x = Math.random() * (gameWidth - 40);
+  enemy.style.left = `${x}px`;
+  enemy.style.top = '0';
+  enemy.health = 3; // Requires 3 hits to defeat
+
+  // Store the player's position when the enemy is spawned
+  const targetX = playerX + player.offsetWidth / 2;
+
+  // Add movement towards the player's position
+  enemy.move = () => {
+    const currentX = parseFloat(enemy.style.left);
+    const currentY = parseFloat(enemy.style.top);
+
+    // Calculate direction towards the player's position
+    const directionX = targetX - currentX;
+    const directionY = gameHeight - currentY;
+
+    // Normalize the direction vector
+    const magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
+    const moveX = (directionX / magnitude) * 1; // Adjust speed as needed
+    const moveY = (directionY / magnitude) * 2; // Adjust speed as needed
+
+    // Update enemy position
+    enemy.style.left = `${currentX + moveX}px`;
+    enemy.style.top = `${currentY + moveY}px`;
+  };
+
   gameContainer.appendChild(enemy);
   enemies.push(enemy);
 }
@@ -159,14 +288,22 @@ function spawnTougherEnemy() {
 }
 
 function spawnBoss() {
-  boss = document.createElement('div');
-  boss.classList.add('boss');
-  boss.style.left = `${gameWidth / 2 - 50}px`; // Center the boss
-  boss.style.top = '0';
-  boss.health = bossHealth; // Set boss health
-  gameContainer.appendChild(boss);
-  bossChargeTimer = 0; // Reset charge timer
-  bossSpeed = 2; // Reset boss speed
+  if (score % 500 === 0 && score !== 0 && !boss) {
+    boss = document.createElement('div');
+    boss.classList.add('boss');
+    boss.style.left = `${gameWidth / 2 - 50}px`; // Center the boss
+    boss.style.top = '0';
+    boss.health = bossHealth; // Set boss health
+    gameContainer.appendChild(boss);
+    bossChargeTimer = 0; // Reset charge timer
+    bossSpeed = 2; // Reset boss speed
+  }
+}
+
+function spawnEnemySwarm() {
+  for (let i = 0; i < 5; i++) { // Spawn 5 enemies at once
+    spawnEnemy();
+  }
 }
 
 function updateScore(points = 10) {
@@ -271,14 +408,34 @@ function updateBoss() {
   }
 }
 
-function gameLoop() {
+function gameLoop(timestamp) {
   if (!gameActive) return; // Stop the game loop if the game is over
+
+  // Update cooldown
+  if (bulletCooldown > 0) {
+    bulletCooldown -= 16.67; // Decrement cooldown by ~16.67ms (assuming 60 FPS)
+  }
 
   // Update player speed
   updatePlayerSpeed();
 
   // Spawn tougher enemies
   spawnTougherEnemy();
+
+  // Spawn fast enemies every 200 points
+  if (score % 200 === 0 && score !== 0) {
+    spawnFastEnemy();
+  }
+
+  // Spawn armored enemies every 400 points
+  if (score % 400 === 0 && score !== 0) {
+    spawnArmoredEnemy();
+  }
+
+  // Spawn enemy swarms every 600 points
+  if (score % 600 === 0 && score !== 0) {
+    spawnEnemySwarm();
+  }
 
   if (isMovingLeft) {
     playerX -= playerSpeed;
@@ -299,10 +456,11 @@ function gameLoop() {
   });
 
   enemies.forEach((enemy, index) => {
-    const top = parseFloat(enemy.style.top);
-    enemy.style.top = `${top + 2}px`;
+    if (enemy.move) {
+      enemy.move(); // Call the enemy's move function
+    }
 
-    // Check if the enemy passes the player
+    const top = parseFloat(enemy.style.top);
     if (top > gameHeight) {
       enemy.remove();
       enemies.splice(index, 1);
